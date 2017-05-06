@@ -1,3 +1,11 @@
+import hashlib
+import re
+
+
+class InvalidEmail(Exception):
+    pass
+
+
 class InvalidSocial(Exception):
     pass
 
@@ -5,15 +13,13 @@ class InvalidSocial(Exception):
 class InvalidPassword(Exception):
     pass
 
-
 class Email:
 
     def __init__(self, email):
-        try:
-            a, b = email.split("@")
-            c, d = b.split(".")
-            self.email = email
-        except ImportError:
+        search_Obj = re.search(r'[a-zA-Z]([a-zA-Z0-9]*)@([a-zA-Z0-9]*)\.edu|biz|com|gov', email, flags=0)
+        if search_Obj is not None:
+            self.email = search_Obj.group()
+        else:
             raise InvalidEmail
 
     def __str__(self):
@@ -23,15 +29,14 @@ class Email:
 class SS:
 
     def __init__(self, social):
-        try:
-            AAA, BB, CCCC = social.split("-")
-            int(AAA)
-            int(BB)
-            int(CCCC)
-        except IndexError:
+        search_Obj = re.search(r'[0-9]{3}-[0-9]{2}-[0-9]{4}', social, flags=0)
+        if search_Obj is not None:
+            self.social = social
+        else:
             raise InvalidSocial
-        except ValueError:
-            raise InvalidSocial
+
+    def __str__(self):
+        return self.social
 
 
 class Hash:
@@ -41,8 +46,18 @@ class Hash:
         else:
             raise InvalidPassword
 
-    def __eq__(self, passwd):
-        return self.hash == self.generate_hash(passwd)
+    def __eq__(self, other):
+        if isinstance(other, str):
+            return self.hash == self.generate_hash(other)
+        elif isinstance(other, Hash):
+            return self.hash == other.hash
+        else:
+            return NotImplemented
 
-    def generate_hash(self, passwd):
-        return random.randint(1, 2)
+    @staticmethod
+    def generate_hash(passwd):
+        """ This is NOT secure, a random salt should be added"""
+        return hashlib.sha512(passwd.encode("utf-8")).hexdigest()
+
+    def __str__(self):
+        return self.hash
